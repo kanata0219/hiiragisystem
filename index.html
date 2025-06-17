@@ -123,14 +123,24 @@
 </head>
 <body>
   <h1>座席管理システム</h1>
-  <button onclick="exportLogs()">ログをCSVで保存</button>
-  <button onclick="clearAllSeats()">全てクリア</button>
-  <button onclick="showLogs()">ログを表示</button>
+  <button onclick="document.getElementById('settingsModal').style.display='flex'">設定</button>
   <br><br>
   <textarea id="logOutput" rows="10" cols="80" readonly style="display:none;"></textarea>
-
   <div class="seat-grid" id="seatGrid"></div>
 
+  <!-- 設定モーダル -->
+  <div class="overlay" id="settingsModal">
+    <div class="modal">
+      <h2>設定</h2>
+      <button onclick="exportLogs()">ログをCSVで保存</button>
+      <button onclick="clearAllSeats()">全てクリア</button>
+      <button onclick="showLogs()">ログを表示</button>
+      <br><br>
+      <button onclick="document.getElementById('settingsModal').style.display='none'">閉じる</button>
+    </div>
+  </div>
+
+  <!-- 座席登録モーダル -->
   <div class="overlay" id="assignModal">
     <div class="modal">
       <h2>座席登録</h2>
