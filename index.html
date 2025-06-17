@@ -125,6 +125,10 @@
   <h1>座席管理システム</h1>
   <button onclick="exportLogs()">ログをCSVで保存</button>
   <button onclick="clearAllSeats()">全てクリア</button>
+  <button onclick="showLogs()">ログを表示</button>
+  <br><br>
+  <textarea id="logOutput" rows="10" cols="80" readonly style="display:none;"></textarea>
+
   <div class="seat-grid" id="seatGrid"></div>
 
   <div class="overlay" id="assignModal">
@@ -192,10 +196,30 @@
           }
         });
       }
+      restoreSeatState();
     }
 
     function saveLogs() {
       localStorage.setItem('seatLogs', JSON.stringify(logData));
+    }
+
+    function restoreSeatState() {
+      logData.forEach(log => {
+        if (!log.checkOut) {
+          const seatEl = document.querySelector(`.seat[data-id='${log.seatId}']`);
+          if (seatEl) {
+            seatEl.classList.add('active');
+            seatEl.classList.remove('red', 'green', 'blue', 'orange');
+            const firstDigit = log.number.charAt(0);
+            if (firstDigit === '1') seatEl.classList.add('red');
+            else if (firstDigit === '2') seatEl.classList.add('green');
+            else if (firstDigit === '3') seatEl.classList.add('blue');
+            else seatEl.classList.add('orange');
+            const idLabel = seatEl.querySelector('.seat-id-label');
+            seatEl.innerHTML = idLabel.outerHTML + `<div>${log.number}</div>` + (log.name ? `<div class="seat-label">${log.name}</div>` : '');
+          }
+        }
+      });
     }
 
     function selectSeat(seat) {
@@ -292,10 +316,22 @@
       const blob = new Blob([csv], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
+      const now = new Date();
+      const fileName = `Log_${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}_${now.getHours().toString().padStart(2,'0')}${now.getMinutes().toString().padStart(2,'0')}${now.getSeconds().toString().padStart(2,'0')}.csv`;
       a.href = url;
-      a.download = 'logs.csv';
+      a.download = fileName;
       a.click();
       URL.revokeObjectURL(url);
+    }
+
+    function showLogs() {
+      let csv = 'ID,座席番号,登録番号,名前,登録時間,退席時間\n';
+      logData.forEach(log => {
+        csv += `${log.id},${log.seatId},${log.number},${log.name},${log.checkIn},${log.checkOut}\n`;
+      });
+      const textarea = document.getElementById('logOutput');
+      textarea.style.display = 'block';
+      textarea.value = csv;
     }
 
     function clearAllSeats() {
