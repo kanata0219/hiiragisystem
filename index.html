@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>座席管理システム</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1>座席管理システム</h1>
+
+  <div id="seat-container"></div>
+
+  <div id="controls">
+    <button id="clear-all">全てクリア</button>
+    <button id="export-log">ログをダウンロード</button>
+  </div>
+
+  <div id="log-container">
+    <h2>ログ</h2>
+    <ul id="log-list"></ul>
+  </div>
+
+  <!-- モーダル -->
+  <div id="modal" class="hidden">
+    <div class="modal-content">
+      <h3>座席登録</h3>
+      <label>名前：<input type="text" id="input-name" /></label><br />
+      <label>番号：<input type="text" id="input-number" /></label><br />
+      <button id="register-btn">登録</button>
+      <button id="cancel-btn">キャンセル</button>
+    </div>
+  </div>
+
+  <!-- 退席確認モーダル -->
+  <div id="confirm-exit" class="hidden">
+    <div class="modal-content">
+      <p>退席してもよいですか？</p>
+      <button id="confirm-yes">はい</button>
+      <button id="confirm-no">いいえ</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
