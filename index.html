@@ -124,6 +124,7 @@
 <body>
   <h1>座席管理システム</h1>
   <button onclick="exportLogs()">ログをCSVで保存</button>
+  <button onclick="clearAllSeats()">全てクリア</button>
   <div class="seat-grid" id="seatGrid"></div>
 
   <div class="overlay" id="assignModal">
@@ -166,7 +167,7 @@
     let selectedSeatEl = null;
     let leaveTargetSeat = null;
     let inputNumberStr = '';
-    let logData = [];
+    let logData = JSON.parse(localStorage.getItem('seatLogs') || '[]');
 
     const seatIds = Array.from({length: 70}, (_, i) => `1${String(i + 1).padStart(2, '0')}`);
 
@@ -191,6 +192,10 @@
           }
         });
       }
+    }
+
+    function saveLogs() {
+      localStorage.setItem('seatLogs', JSON.stringify(logData));
     }
 
     function selectSeat(seat) {
@@ -251,7 +256,7 @@
       selectedSeatEl.innerHTML = idLabel.outerHTML + `<div>${inputNumberStr}</div>` + (userName ? `<div class="seat-label">${userName}</div>` : '');
 
       logData.push({ id, seatId, number: inputNumberStr, name: userName, checkIn: now, checkOut: '' });
-
+      saveLogs();
       closeAssignModal();
     }
 
@@ -274,6 +279,7 @@
         const now = new Date().toLocaleString();
         const log = logData.find(entry => entry.seatId === seatId && !entry.checkOut);
         if (log) log.checkOut = now;
+        saveLogs();
       }
       leaveTargetSeat = null;
     }
@@ -290,6 +296,16 @@
       a.download = 'logs.csv';
       a.click();
       URL.revokeObjectURL(url);
+    }
+
+    function clearAllSeats() {
+      document.querySelectorAll('.seat').forEach(seat => {
+        const idLabel = seat.querySelector('.seat-id-label');
+        seat.classList.remove('active', 'red', 'green', 'blue', 'orange');
+        seat.innerHTML = idLabel ? idLabel.outerHTML : '';
+      });
+      logData = [];
+      localStorage.removeItem('seatLogs');
     }
 
     createSeats();
