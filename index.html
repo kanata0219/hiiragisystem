@@ -40,19 +40,19 @@
       background: #bbb;
     }
     .seat.active.red {
-      background: #f44336; /* 赤 */
+      background: #f44336;
       color: white;
     }
     .seat.active.green {
-      background: #4caf50; /* 緑 */
+      background: #4caf50;
       color: white;
     }
     .seat.active.blue {
-      background: #2196f3; /* 青 */
+      background: #2196f3;
       color: white;
     }
     .seat.active.orange {
-      background: #ff9800; /* 橙 */
+      background: #ff9800;
       color: white;
     }
     .seat-label {
@@ -123,9 +123,9 @@
 </head>
 <body>
   <h1>座席管理システム</h1>
+  <button onclick="exportLogs()">ログをCSVで保存</button>
   <div class="seat-grid" id="seatGrid"></div>
 
-  <!-- 座席登録モーダル -->
   <div class="overlay" id="assignModal">
     <div class="modal">
       <h2>座席登録</h2>
@@ -152,7 +152,6 @@
     </div>
   </div>
 
-  <!-- 退席確認モーダル -->
   <div class="overlay" id="confirmModal">
     <div class="modal">
       <h2>退席しますか？</h2>
@@ -167,6 +166,7 @@
     let selectedSeatEl = null;
     let leaveTargetSeat = null;
     let inputNumberStr = '';
+    let logData = [];
 
     const seatIds = Array.from({length: 70}, (_, i) => `1${String(i + 1).padStart(2, '0')}`);
 
@@ -226,12 +226,19 @@
       display.textContent = inputNumberStr.padStart(4, '-');
     }
 
+    function generateId() {
+      return 'ID' + Math.random().toString(36).substr(2, 9);
+    }
+
     function confirmAssign() {
       const userName = document.getElementById('userName').value.trim();
       if (inputNumberStr.length !== 4) {
         alert('4桁の数字を入力してください');
         return;
       }
+      const now = new Date().toLocaleString();
+      const id = generateId();
+      const seatId = selectedSeatEl.dataset.id;
       const firstDigit = inputNumberStr.charAt(0);
       selectedSeatEl.classList.add('active');
       selectedSeatEl.classList.remove('red', 'green', 'blue', 'orange');
@@ -242,6 +249,9 @@
 
       const idLabel = selectedSeatEl.querySelector('.seat-id-label');
       selectedSeatEl.innerHTML = idLabel.outerHTML + `<div>${inputNumberStr}</div>` + (userName ? `<div class="seat-label">${userName}</div>` : '');
+
+      logData.push({ id, seatId, number: inputNumberStr, name: userName, checkIn: now, checkOut: '' });
+
       closeAssignModal();
     }
 
@@ -260,15 +270,29 @@
         const idLabel = leaveTargetSeat.querySelector('.seat-id-label');
         leaveTargetSeat.classList.remove('active', 'red', 'green', 'blue', 'orange');
         leaveTargetSeat.innerHTML = idLabel ? idLabel.outerHTML : '';
+        const seatId = leaveTargetSeat.dataset.id;
+        const now = new Date().toLocaleString();
+        const log = logData.find(entry => entry.seatId === seatId && !entry.checkOut);
+        if (log) log.checkOut = now;
       }
       leaveTargetSeat = null;
     }
 
-    createSeats();
-  </script>
-</body>
-</html>
+    function exportLogs() {
+      let csv = 'ID,座席番号,登録番号,名前,登録時間,退席時間\n';
+      logData.forEach(log => {
+        csv += `${log.id},${log.seatId},${log.number},${log.name},${log.checkIn},${log.checkOut}\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'logs.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
 
+    createSeats();
   </script>
 </body>
 </html>
