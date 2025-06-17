@@ -72,66 +72,78 @@
     <button onclick="assignSeat()">座席を登録</button>
     <button onclick="clearSeats()">全座席クリア</button>
   </div>
+  
+<script>
+  const rows = 7;
+  const cols = [3, 4, 3];
+  const seatGrid = document.getElementById('seatGrid');
+  let selectedSeatId = null;
 
-  <script>
-    const rows = 7;
-    const cols = [3, 4, 3];
-    const seatGrid = document.getElementById('seatGrid');
-    let selectedSeatId = null;
-
-    function createSeats() {
-      for (let row = 0; row < rows; row++) {
-        cols.forEach((count, blockIndex) => {
-          for (let col = 0; col < count; col++) {
-            const seat = document.createElement('div');
-            const seatId = `${row}-${blockIndex}-${col}`;
-            seat.className = 'seat';
-            seat.dataset.id = seatId;
-            seat.addEventListener('click', () => selectSeat(seat));
-            seatGrid.appendChild(seat);
-          }
-          if (blockIndex < cols.length - 1) {
-            const spacer = document.createElement('div');
-            spacer.style.gridColumn = 'auto';
-            seatGrid.appendChild(spacer);
-          }
-        });
-      }
+  function createSeats() {
+    for (let row = 0; row < rows; row++) {
+      cols.forEach((count, blockIndex) => {
+        for (let col = 0; col < count; col++) {
+          const seat = document.createElement('div');
+          const seatId = `${row}-${blockIndex}-${col}`;
+          seat.className = 'seat';
+          seat.dataset.id = seatId;
+          seat.addEventListener('click', () => selectSeat(seat));
+          seatGrid.appendChild(seat);
+        }
+        if (blockIndex < cols.length - 1) {
+          const spacer = document.createElement('div');
+          spacer.style.gridColumn = 'auto';
+          seatGrid.appendChild(spacer);
+        }
+      });
     }
+  }
 
-    function selectSeat(seat) {
-      document.querySelectorAll('.seat').forEach(s => s.classList.remove('selected'));
-      seat.classList.add('selected');
-      selectedSeatId = seat.dataset.id;
-      document.getElementById('selectedSeat').textContent = selectedSeatId;
-    }
-
-    function assignSeat() {
-      if (!selectedSeatId) return alert('座席を選択してください');
-      const userId = document.getElementById('userId').value.trim();
-      const userName = document.getElementById('userName').value.trim();
-      if (!userId || !userName) return alert('番号と名前を入力してください');
-      const seat = document.querySelector(`.seat[data-id="${selectedSeatId}"]`);
-      seat.classList.add('active');
-      seat.innerHTML = `<div>${userId}</div><div class="seat-label">${userName}</div>`;
-      seat.classList.remove('selected');
-      selectedSeatId = null;
-      document.getElementById('selectedSeat').textContent = 'なし';
-      document.getElementById('userId').value = '';
-      document.getElementById('userName').value = '';
-    }
-
-    function clearSeats() {
-      if (!confirm('すべての座席情報をクリアしますか？')) return;
-      document.querySelectorAll('.seat').forEach(seat => {
+  function selectSeat(seat) {
+    // 登録済みなら退席確認
+    if (seat.classList.contains('active')) {
+      const confirmLeave = confirm('退席しますか？');
+      if (confirmLeave) {
         seat.classList.remove('active', 'selected');
         seat.textContent = '';
-      });
-      selectedSeatId = null;
-      document.getElementById('selectedSeat').textContent = 'なし';
+      }
+      return;
     }
 
-    createSeats();
-  </script>
+    // 新規選択処理
+    document.querySelectorAll('.seat').forEach(s => s.classList.remove('selected'));
+    seat.classList.add('selected');
+    selectedSeatId = seat.dataset.id;
+    document.getElementById('selectedSeat').textContent = selectedSeatId;
+  }
+
+  function assignSeat() {
+    if (!selectedSeatId) return alert('座席を選択してください');
+    const userId = document.getElementById('userId').value.trim();
+    const userName = document.getElementById('userName').value.trim();
+    if (!userId || !userName) return alert('番号と名前を入力してください');
+    const seat = document.querySelector(`.seat[data-id="${selectedSeatId}"]`);
+    seat.classList.add('active');
+    seat.innerHTML = `<div>${userId}</div><div class="seat-label">${userName}</div>`;
+    seat.classList.remove('selected');
+    selectedSeatId = null;
+    document.getElementById('selectedSeat').textContent = 'なし';
+    document.getElementById('userId').value = '';
+    document.getElementById('userName').value = '';
+  }
+
+  function clearSeats() {
+    if (!confirm('すべての座席情報をクリアしますか？')) return;
+    document.querySelectorAll('.seat').forEach(seat => {
+      seat.classList.remove('active', 'selected');
+      seat.textContent = '';
+    });
+    selectedSeatId = null;
+    document.getElementById('selectedSeat').textContent = 'なし';
+  }
+
+  createSeats();
+</script>
+
 </body>
 </html>
