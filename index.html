@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>柊陵会館座席指定システム 1階</title>
+  <title>座席管理システム</title>
   <style>
     body {
       font-family: sans-serif;
@@ -39,8 +39,20 @@
     .seat:hover {
       background: #bbb;
     }
-    .seat.active {
-      background: #4caf50;
+    .seat.active.red {
+      background: #f44336; /* 赤 */
+      color: white;
+    }
+    .seat.active.green {
+      background: #4caf50; /* 緑 */
+      color: white;
+    }
+    .seat.active.blue {
+      background: #2196f3; /* 青 */
+      color: white;
+    }
+    .seat.active.orange {
+      background: #ff9800; /* 橙 */
       color: white;
     }
     .seat-label {
@@ -55,6 +67,10 @@
       top: 2px;
       left: 2px;
       font-weight: bold;
+    }
+    .spacer {
+      width: 40px;
+      height: 60px;
     }
     .overlay {
       position: fixed;
@@ -170,7 +186,7 @@
           }
           if (blockIndex < 2) {
             const spacer = document.createElement('div');
-            spacer.style.gridColumn = 'auto';
+            spacer.className = 'spacer';
             seatGrid.appendChild(spacer);
           }
         });
@@ -216,7 +232,14 @@
         alert('4桁の数字を入力してください');
         return;
       }
+      const firstDigit = inputNumberStr.charAt(0);
       selectedSeatEl.classList.add('active');
+      selectedSeatEl.classList.remove('red', 'green', 'blue', 'orange');
+      if (firstDigit === '1') selectedSeatEl.classList.add('red');
+      else if (firstDigit === '2') selectedSeatEl.classList.add('green');
+      else if (firstDigit === '3') selectedSeatEl.classList.add('blue');
+      else selectedSeatEl.classList.add('orange');
+
       const idLabel = selectedSeatEl.querySelector('.seat-id-label');
       selectedSeatEl.innerHTML = idLabel.outerHTML + `<div>${inputNumberStr}</div>` + (userName ? `<div class="seat-label">${userName}</div>` : '');
       closeAssignModal();
@@ -235,13 +258,17 @@
       document.getElementById('confirmModal').style.display = 'none';
       if (answer && leaveTargetSeat) {
         const idLabel = leaveTargetSeat.querySelector('.seat-id-label');
-        leaveTargetSeat.classList.remove('active');
+        leaveTargetSeat.classList.remove('active', 'red', 'green', 'blue', 'orange');
         leaveTargetSeat.innerHTML = idLabel ? idLabel.outerHTML : '';
       }
       leaveTargetSeat = null;
     }
 
     createSeats();
+  </script>
+</body>
+</html>
+
   </script>
 </body>
 </html>
