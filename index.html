@@ -26,13 +26,15 @@
       width: 60px;
       height: 60px;
       background: #ddd;
-      border-radius: 6px;
+      border-radius: 0;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       position: relative;
       transition: background 0.3s;
+      box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+      flex-direction: column;
     }
     .seat:hover {
       background: #bbb;
@@ -47,17 +49,59 @@
       bottom: 2px;
       left: 2px;
     }
-    .form-container {
-      margin-top: 20px;
+    .seat-id-label {
+      font-size: 11px;
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      font-weight: bold;
     }
-    input[type="text"] {
-      padding: 5px;
-      margin: 5px;
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
     }
-    button {
-      padding: 6px 12px;
-      margin: 5px;
-      cursor: pointer;
+    .modal {
+      background: white;
+      padding: 40px;
+      border-radius: 10px;
+      width: 350px;
+      max-width: 90vw;
+      box-shadow: 0 0 15px rgba(0,0,0,0.4);
+      text-align: center;
+      font-size: 18px;
+    }
+    .modal input[type="text"] {
+      width: 90%;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 16px;
+    }
+    .modal button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin: 10px;
+    }
+    .number-display {
+      font-size: 24px;
+      margin: 10px 0;
+    }
+    .keypad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 10px 0;
+    }
+    .keypad button {
+      font-size: 20px;
+      padding: 15px;
     }
   </style>
 </head>
@@ -65,85 +109,139 @@
   <h1>座席管理システム</h1>
   <div class="seat-grid" id="seatGrid"></div>
 
-  <div class="form-container">
-    <p>選択された座席: <span id="selectedSeat">なし</span></p>
-    <input type="text" id="userId" placeholder="番号（例: 12）">
-    <input type="text" id="userName" placeholder="名前">
-    <button onclick="assignSeat()">座席を登録</button>
-    <button onclick="clearSeats()">全座席クリア</button>
+  <!-- 座席登録モーダル -->
+  <div class="overlay" id="assignModal">
+    <div class="modal">
+      <h2>座席登録</h2>
+      <div class="number-display" id="numberDisplay">----</div>
+      <div class="keypad">
+        <button onclick="inputNumber(1)">1</button>
+        <button onclick="inputNumber(2)">2</button>
+        <button onclick="inputNumber(3)">3</button>
+        <button onclick="inputNumber(4)">4</button>
+        <button onclick="inputNumber(5)">5</button>
+        <button onclick="inputNumber(6)">6</button>
+        <button onclick="inputNumber(7)">7</button>
+        <button onclick="inputNumber(8)">8</button>
+        <button onclick="inputNumber(9)">9</button>
+        <button onclick="clearNumber()">C</button>
+        <button onclick="inputNumber(0)">0</button>
+        <button onclick="deleteLastDigit()">←</button>
+      </div>
+      <input type="text" id="userName" placeholder="名前（任意）">
+      <div>
+        <button onclick="confirmAssign()">登録</button>
+        <button onclick="closeAssignModal()">キャンセル</button>
+      </div>
+    </div>
   </div>
-  
-<script>
-  const rows = 7;
-  const cols = [3, 4, 3];
-  const seatGrid = document.getElementById('seatGrid');
-  let selectedSeatId = null;
 
-  function createSeats() {
-    for (let row = 0; row < rows; row++) {
-      cols.forEach((count, blockIndex) => {
-        for (let col = 0; col < count; col++) {
-          const seat = document.createElement('div');
-          const seatId = `${row}-${blockIndex}-${col}`;
-          seat.className = 'seat';
-          seat.dataset.id = seatId;
-          seat.addEventListener('click', () => selectSeat(seat));
-          seatGrid.appendChild(seat);
-        }
-        if (blockIndex < cols.length - 1) {
-          const spacer = document.createElement('div');
-          spacer.style.gridColumn = 'auto';
-          seatGrid.appendChild(spacer);
-        }
-      });
-    }
-  }
+  <!-- 退席確認モーダル -->
+  <div class="overlay" id="confirmModal">
+    <div class="modal">
+      <h2>退席しますか？</h2>
+      <button onclick="confirmLeave(true)">はい</button>
+      <button onclick="confirmLeave(false)">いいえ</button>
+    </div>
+  </div>
 
-  function selectSeat(seat) {
-    // 登録済みなら退席確認
-    if (seat.classList.contains('active')) {
-      const confirmLeave = confirm('退席しますか？');
-      if (confirmLeave) {
-        seat.classList.remove('active', 'selected');
-        seat.textContent = '';
+  <script>
+    const seatGrid = document.getElementById('seatGrid');
+    let selectedSeatId = null;
+    let selectedSeatEl = null;
+    let leaveTargetSeat = null;
+    let inputNumberStr = '';
+
+    const seatIds = Array.from({length: 70}, (_, i) => `1${String(i + 1).padStart(2, '0')}`);
+
+    function createSeats() {
+      let index = 0;
+      for (let r = 0; r < 7; r++) {
+        [3, 4, 3].forEach((count, blockIndex) => {
+          for (let i = 0; i < count; i++) {
+            const seat = document.createElement('div');
+            const seatId = seatIds[index];
+            seat.className = 'seat';
+            seat.dataset.id = seatId;
+            seat.innerHTML = `<div class="seat-id-label">${seatId}</div>`;
+            seat.addEventListener('click', () => selectSeat(seat));
+            seatGrid.appendChild(seat);
+            index++;
+          }
+          if (blockIndex < 2) {
+            const spacer = document.createElement('div');
+            spacer.style.gridColumn = 'auto';
+            seatGrid.appendChild(spacer);
+          }
+        });
       }
-      return;
     }
 
-    // 新規選択処理
-    document.querySelectorAll('.seat').forEach(s => s.classList.remove('selected'));
-    seat.classList.add('selected');
-    selectedSeatId = seat.dataset.id;
-    document.getElementById('selectedSeat').textContent = selectedSeatId;
-  }
+    function selectSeat(seat) {
+      if (seat.classList.contains('active')) {
+        leaveTargetSeat = seat;
+        document.getElementById('confirmModal').style.display = 'flex';
+        return;
+      }
+      selectedSeatId = seat.dataset.id;
+      selectedSeatEl = seat;
+      document.getElementById('assignModal').style.display = 'flex';
+    }
 
-  function assignSeat() {
-    if (!selectedSeatId) return alert('座席を選択してください');
-    const userId = document.getElementById('userId').value.trim();
-    const userName = document.getElementById('userName').value.trim();
-    if (!userId || !userName) return alert('番号と名前を入力してください');
-    const seat = document.querySelector(`.seat[data-id="${selectedSeatId}"]`);
-    seat.classList.add('active');
-    seat.innerHTML = `<div>${userId}</div><div class="seat-label">${userName}</div>`;
-    seat.classList.remove('selected');
-    selectedSeatId = null;
-    document.getElementById('selectedSeat').textContent = 'なし';
-    document.getElementById('userId').value = '';
-    document.getElementById('userName').value = '';
-  }
+    function inputNumber(digit) {
+      if (inputNumberStr.length < 4) {
+        inputNumberStr += digit;
+        updateDisplay();
+      }
+    }
 
-  function clearSeats() {
-    if (!confirm('すべての座席情報をクリアしますか？')) return;
-    document.querySelectorAll('.seat').forEach(seat => {
-      seat.classList.remove('active', 'selected');
-      seat.textContent = '';
-    });
-    selectedSeatId = null;
-    document.getElementById('selectedSeat').textContent = 'なし';
-  }
+    function clearNumber() {
+      inputNumberStr = '';
+      updateDisplay();
+    }
 
-  createSeats();
-</script>
+    function deleteLastDigit() {
+      inputNumberStr = inputNumberStr.slice(0, -1);
+      updateDisplay();
+    }
 
+    function updateDisplay() {
+      const display = document.getElementById('numberDisplay');
+      display.textContent = inputNumberStr.padStart(4, '-');
+    }
+
+    function confirmAssign() {
+      const userName = document.getElementById('userName').value.trim();
+      if (inputNumberStr.length !== 4) {
+        alert('4桁の数字を入力してください');
+        return;
+      }
+      selectedSeatEl.classList.add('active');
+      const idLabel = selectedSeatEl.querySelector('.seat-id-label');
+      selectedSeatEl.innerHTML = idLabel.outerHTML + `<div>${inputNumberStr}</div>` + (userName ? `<div class="seat-label">${userName}</div>` : '');
+      closeAssignModal();
+    }
+
+    function closeAssignModal() {
+      document.getElementById('assignModal').style.display = 'none';
+      document.getElementById('userName').value = '';
+      inputNumberStr = '';
+      updateDisplay();
+      selectedSeatId = null;
+      selectedSeatEl = null;
+    }
+
+    function confirmLeave(answer) {
+      document.getElementById('confirmModal').style.display = 'none';
+      if (answer && leaveTargetSeat) {
+        const idLabel = leaveTargetSeat.querySelector('.seat-id-label');
+        leaveTargetSeat.classList.remove('active');
+        leaveTargetSeat.innerHTML = idLabel ? idLabel.outerHTML : '';
+      }
+      leaveTargetSeat = null;
+    }
+
+    createSeats();
+  </script>
 </body>
 </html>
