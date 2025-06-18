@@ -36,6 +36,13 @@
       box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
       flex-direction: column;
     }
+    .seat.unavailable {
+  background: #999 !important;
+  color: #333 !important;
+  cursor: not-allowed !important;
+  pointer-events: none;
+}
+
     .seat:hover {
       background: #bbb;
     }
@@ -185,6 +192,18 @@
 
     const seatIds = Array.from({length: 70}, (_, i) => `1${String(i + 1).padStart(2, '0')}`);
 
+　　const GAS_URL = 'https://script.google.com/macros/s/AKfycbwAuwarsWQv115UQhTXeq0Ag9_L3f0OQYLV4F_a4wZgLCqm0Re6M9ykGLYMR9VXgVcP/exec'; // あなたのGAS URLに置き換える
+
+window.onload = async () => {
+  createSeats();
+  const res = await fetch(GAS_URL);
+  const data = await res.json();
+  const unavailable = data.unavailable || [];
+  markUnavailableSeats(unavailable);
+  restoreSeatState();
+};
+
+    
     function createSeats() {
       let index = 0;
       for (let r = 0; r < 7; r++) {
@@ -355,6 +374,16 @@
     }
 
     createSeats();
+    
+    function markUnavailableSeats(unavailList) {
+  unavailList.forEach(seatId => {
+    const seat = document.querySelector(`.seat[data-id='${seatId}']`);
+    if (!seat) return;
+    seat.classList.add('unavailable');
+    seat.replaceWith(seat.cloneNode(true)); // イベントを無効にするため
+  });
+}
+
   </script>
 </body>
 </html>
