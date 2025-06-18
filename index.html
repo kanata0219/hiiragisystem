@@ -375,18 +375,18 @@ function createSeats() {
     }
 
 
-    
-
 function markUnavailableSeats(unavailList) {
   unavailList.forEach(seatId => {
-    const seat = document.querySelector(`.seat[data-id='${seatId}']`);
+    const idStr = seatId.toString(); // ← 数値を文字列に変換
+    const seat = document.querySelector(`.seat[data-id='${idStr}']`);
     if (seat) {
       seat.classList.add('unavailable');
-      seat.style.pointerEvents = 'none';  // 無効化
-      seat.title = '使用不可';            // ユーザーに明示
+      seat.style.pointerEvents = 'none';
+      seat.title = '使用不可';
     }
   });
 }
+
 
 
   </script>
