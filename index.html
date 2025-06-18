@@ -192,17 +192,24 @@
 
     const seatIds = Array.from({length: 70}, (_, i) => `1${String(i + 1).padStart(2, '0')}`);
 
-　　const GAS_URL = 'https://script.google.com/macros/s/AKfycbwAuwarsWQv115UQhTXeq0Ag9_L3f0OQYLV4F_a4wZgLCqm0Re6M9ykGLYMR9VXgVcP/exec'; // あなたのGAS URLに置き換える
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwAuwarsWQv115UQhTXeq0Ag9_L3f0OQYLV4F_a4wZgLCqm0Re6M9ykGLYMR9VXgVcP/exec';
 
-window.onload = async () => {
-  let unavailable = [];
-  try {
-    const res = await fetch(GAS_URL);
-    const data = await res.json();
-    unavailable = data.unavailable || [];
-  } catch (e) {
-    console.warn('GASからのデータ取得に失敗しました', e);
-  }
+async function fetchUnavailableSeats() {
+  const formData = new URLSearchParams();
+  formData.append('mode', 'getUnavailable');
+
+  const res = await fetch(GAS_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: formData.toString(),
+  });
+
+  const data = await res.json();
+  return data.unavailable;
+}
+
 
   createSeats(); // 常に呼び出す
   markUnavailableSeats(unavailable); // 使用不可席の反映
