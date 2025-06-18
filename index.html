@@ -206,15 +206,14 @@ async function fetchUnavailableSeats() {
 
   const result = await res.json();
   console.log(result); // 確認用
-  return result.unavailable;
 
+  const unavailable = result.unavailable;
 
+  createSeats(); // 座席を描画
+  markUnavailableSeats(unavailable); // 使用不可反映
+  restoreSeatState(); // ログ復元
+}
 
-
-  createSeats(); // 常に呼び出す
-  markUnavailableSeats(unavailable); // 使用不可席の反映
-  restoreSeatState(); // ログから状態復元
-};
 
 
 function createSeats() {
@@ -399,7 +398,7 @@ function markUnavailableSeats(unavailList) {
   });
 }
 
-
+  fetchUnavailableSeats();
 
   </script>
 </body>
