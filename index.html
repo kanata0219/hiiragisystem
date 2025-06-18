@@ -192,13 +192,11 @@
 
     const seatIds = Array.from({length: 70}, (_, i) => `1${String(i + 1).padStart(2, '0')}`);
 
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbwAuwarsWQv115UQhTXeq0Ag9_L3f0OQYLV4F_a4wZgLCqm0Re6M9ykGLYMR9VXgVcP/exec';
-
 async function fetchUnavailableSeats() {
   const formData = new URLSearchParams();
   formData.append('mode', 'getUnavailable');
 
-  const res = await fetch(GAS_URL, {
+  const res = await fetch('https://script.google.com/macros/s/AKfycbyeSdQYeuDnklDsJ251YahsMuW7sYmpe1ZzqEzIqIKUjKpup9YmSGCfRNCsrwP9Fg9H/exec', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -206,9 +204,11 @@ async function fetchUnavailableSeats() {
     body: formData.toString(),
   });
 
-  const data = await res.json();
-  return data.unavailable;
+  const result = await res.json();
+  console.log(result); // 確認用
+  return result.unavailable;
 }
+
 
 
   createSeats(); // 常に呼び出す
