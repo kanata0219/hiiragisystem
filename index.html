@@ -195,16 +195,18 @@
 　　const GAS_URL = 'https://script.google.com/macros/s/AKfycbwAuwarsWQv115UQhTXeq0Ag9_L3f0OQYLV4F_a4wZgLCqm0Re6M9ykGLYMR9VXgVcP/exec'; // あなたのGAS URLに置き換える
 
 window.onload = async () => {
-  createSeats(); // ← ここで seats を1回だけ作成
-  restoreSeatState(); // ← 状態を先に復元
   const res = await fetch(GAS_URL);
   const data = await res.json();
   const unavailable = data.unavailable || [];
-  markUnavailableSeats(unavailable); // ← 最後に無効席を上書き
+  createSeats();  // データ取得後に座席生成
+  markUnavailableSeats(unavailable); // その後に使用不可処理
+  restoreSeatState();
 };
 
 
-    function createSeats() {
+
+function createSeats() {
+  seatGrid.innerHTML = ''; // 重複防止のためクリア
   let index = 0;
   for (let r = 0; r < 7; r++) {
     [3, 4, 3].forEach((count, blockIndex) => {
@@ -225,7 +227,6 @@ window.onload = async () => {
       }
     });
   }
-  // ❌ ここで restoreSeatState() を呼ばない！
 }
 
     function saveLogs() {
@@ -375,13 +376,15 @@ window.onload = async () => {
 
 
     
+
 function markUnavailableSeats(unavailList) {
   unavailList.forEach(seatId => {
     const seat = document.querySelector(`.seat[data-id='${seatId}']`);
-    if (!seat) return;
-    seat.classList.add('unavailable');
-    seat.removeEventListener('click', () => selectSeat(seat)); // 明示的に削除（無効化）
-    seat.onclick = null; // 念のためクリックイベント無効
+    if (seat) {
+      seat.classList.add('unavailable');
+      seat.style.pointerEvents = 'none';  // 無効化
+      seat.title = '使用不可';            // ユーザーに明示
+    }
   });
 }
 
