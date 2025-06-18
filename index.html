@@ -195,38 +195,38 @@
 　　const GAS_URL = 'https://script.google.com/macros/s/AKfycbwAuwarsWQv115UQhTXeq0Ag9_L3f0OQYLV4F_a4wZgLCqm0Re6M9ykGLYMR9VXgVcP/exec'; // あなたのGAS URLに置き換える
 
 window.onload = async () => {
-  createSeats();
+  createSeats(); // ← ここで seats を1回だけ作成
+  restoreSeatState(); // ← 状態を先に復元
   const res = await fetch(GAS_URL);
   const data = await res.json();
   const unavailable = data.unavailable || [];
-  markUnavailableSeats(unavailable);
-  restoreSeatState();
+  markUnavailableSeats(unavailable); // ← 最後に無効席を上書き
 };
 
-    
+
     function createSeats() {
-      let index = 0;
-      for (let r = 0; r < 7; r++) {
-        [3, 4, 3].forEach((count, blockIndex) => {
-          for (let i = 0; i < count; i++) {
-            const seat = document.createElement('div');
-            const seatId = seatIds[index];
-            seat.className = 'seat';
-            seat.dataset.id = seatId;
-            seat.innerHTML = `<div class="seat-id-label">${seatId}</div>`;
-            seat.addEventListener('click', () => selectSeat(seat));
-            seatGrid.appendChild(seat);
-            index++;
-          }
-          if (blockIndex < 2) {
-            const spacer = document.createElement('div');
-            spacer.className = 'spacer';
-            seatGrid.appendChild(spacer);
-          }
-        });
+  let index = 0;
+  for (let r = 0; r < 7; r++) {
+    [3, 4, 3].forEach((count, blockIndex) => {
+      for (let i = 0; i < count; i++) {
+        const seat = document.createElement('div');
+        const seatId = seatIds[index];
+        seat.className = 'seat';
+        seat.dataset.id = seatId;
+        seat.innerHTML = `<div class="seat-id-label">${seatId}</div>`;
+        seat.addEventListener('click', () => selectSeat(seat));
+        seatGrid.appendChild(seat);
+        index++;
       }
-      restoreSeatState();
-    }
+      if (blockIndex < 2) {
+        const spacer = document.createElement('div');
+        spacer.className = 'spacer';
+        seatGrid.appendChild(spacer);
+      }
+    });
+  }
+  // ❌ ここで restoreSeatState() を呼ばない！
+}
 
     function saveLogs() {
       localStorage.setItem('seatLogs', JSON.stringify(logData));
@@ -373,16 +373,18 @@ window.onload = async () => {
       localStorage.removeItem('seatLogs');
     }
 
-    createSeats();
+
     
-    function markUnavailableSeats(unavailList) {
+function markUnavailableSeats(unavailList) {
   unavailList.forEach(seatId => {
     const seat = document.querySelector(`.seat[data-id='${seatId}']`);
     if (!seat) return;
     seat.classList.add('unavailable');
-    seat.replaceWith(seat.cloneNode(true)); // イベントを無効にするため
+    seat.removeEventListener('click', () => selectSeat(seat)); // 明示的に削除（無効化）
+    seat.onclick = null; // 念のためクリックイベント無効
   });
 }
+
 
   </script>
 </body>
