@@ -195,14 +195,19 @@
 　　const GAS_URL = 'https://script.google.com/macros/s/AKfycbwAuwarsWQv115UQhTXeq0Ag9_L3f0OQYLV4F_a4wZgLCqm0Re6M9ykGLYMR9VXgVcP/exec'; // あなたのGAS URLに置き換える
 
 window.onload = async () => {
-  const res = await fetch(GAS_URL);
-  const data = await res.json();
-  const unavailable = data.unavailable || [];
-  createSeats();  // データ取得後に座席生成
-  markUnavailableSeats(unavailable); // その後に使用不可処理
-  restoreSeatState();
-};
+  let unavailable = [];
+  try {
+    const res = await fetch(GAS_URL);
+    const data = await res.json();
+    unavailable = data.unavailable || [];
+  } catch (e) {
+    console.warn('GASからのデータ取得に失敗しました', e);
+  }
 
+  createSeats(); // 常に呼び出す
+  markUnavailableSeats(unavailable); // 使用不可席の反映
+  restoreSeatState(); // ログから状態復元
+};
 
 
 function createSeats() {
