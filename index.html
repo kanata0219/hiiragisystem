@@ -410,9 +410,12 @@ function updateOccupancyRate() {
   const rateEl = document.getElementById('occupancyRate');
   rateEl.textContent = `混雑率：${roundedRate}%`;
 }
+    
+window.addEventListener('DOMContentLoaded', async () => {
+  createSeats();
+  await loadUnavailableSeats();
+});
 
-
-    createSeats();
   </script>
 </body>
 </html>
