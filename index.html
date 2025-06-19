@@ -186,6 +186,38 @@
    　 <button onclick="document.getElementById('logModal').style.display='none'">閉じる</button>
  　 </div>
 　</div>
+  
+<!-- パスワード入力モーダル -->
+<div class="overlay" id="loginModal">
+  <div class="modal">
+    <h2>パスワードを入力</h2>
+    <div class="number-display" id="passwordDisplay">------</div>
+    <div class="keypad">
+      <button onclick="inputPasswordDigit(1)">1</button>
+      <button onclick="inputPasswordDigit(2)">2</button>
+      <button onclick="inputPasswordDigit(3)">3</button>
+      <button onclick="inputPasswordDigit(4)">4</button>
+      <button onclick="inputPasswordDigit(5)">5</button>
+      <button onclick="inputPasswordDigit(6)">6</button>
+      <button onclick="inputPasswordDigit(7)">7</button>
+      <button onclick="inputPasswordDigit(8)">8</button>
+      <button onclick="inputPasswordDigit(9)">9</button>
+      <button onclick="clearPassword()">C</button>
+      <button onclick="inputPasswordDigit(0)">0</button>
+      <button onclick="deleteLastPasswordDigit()">←</button>
+    </div>
+    <button onclick="verifyPassword()">ログイン</button>
+  </div>
+</div>
+
+<!-- 選択モーダル -->
+<div class="overlay" id="selectModal">
+  <div class="modal">
+    <h2>選択してください</h2>
+    <button onclick="openSeatView()">座席表を開く</button>
+    <button onclick="openAdminSheet()">管理画面を開く</button>
+  </div>
+</div>
 
 
   <script>
@@ -420,11 +452,72 @@ function updateOccupancyRate() {
   const rateEl = document.getElementById('occupancyRate');
   rateEl.textContent = `混雑率：${roundedRate}%`;
 }
+
+    let passwordInput = '';
+
+function inputPasswordDigit(d) {
+  if (passwordInput.length < 6) {
+    passwordInput += d;
+    updatePasswordDisplay();
+  }
+}
+
+function updatePasswordDisplay() {
+  document.getElementById('passwordDisplay').textContent = passwordInput.padStart(6, '-');
+}
+
+function clearPassword() {
+  passwordInput = '';
+  updatePasswordDisplay();
+}
+
+function deleteLastPasswordDigit() {
+  passwordInput = passwordInput.slice(0, -1);
+  updatePasswordDisplay();
+}
+
+async function verifyPassword() {
+  const formData = new URLSearchParams();
+  formData.append('mode', 'getPassword');
+
+  try {
+    const res = await fetch('https://script.google.com/macros/s/AKfycbwoRCnZ-nJTZ9tNbxHm3kP7treCUXBTefMQCWmF9awGcYkEhtVyliNmbV4KE8f8y8sE/exec', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: formData.toString()
+    });
+    const result = await res.json();
+    if (passwordInput === result.password) {
+      document.getElementById('loginModal').style.display = 'none';
+      document.getElementById('selectModal').style.display = 'flex';
+    } else {
+      alert('パスワードが違います');
+      clearPassword();
+    }
+  } catch (e) {
+    alert('パスワード取得に失敗しました');
+  }
+}
+
+function openSeatView() {
+  document.getElementById('selectModal').style.display = 'none';
+}
+
+function openAdminSheet() {
+  window.open('https://docs.google.com/spreadsheets/d/1M3Y8ChMY76PEg8UZuqHSN8D6pGTT-bsLFMHXnTWQ6Wc/edit?gid=0#gid=0');
+}
+
+
     
 window.addEventListener('DOMContentLoaded', async () => {
   createSeats();
   await loadUnavailableSeats();
 });
+
+  window.onload = () => {
+  document.getElementById('loginModal').style.display = 'flex';
+};
+
 
   </script>
 </body>
