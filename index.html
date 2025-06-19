@@ -135,6 +135,7 @@
       <button onclick="exportLogs()">ログをCSVで保存</button>
       <button onclick="clearAllSeats()">全てクリア</button>
       <button onclick="showLogs()">ログを表示</button>
+      <button onclick="loadUnavailableSeats()">使用不可能席の読み込み</button>
       <br><br>
       <button onclick="document.getElementById('settingsModal').style.display='none'">閉じる</button>
     </div>
@@ -353,6 +354,43 @@
       logData = [];
       localStorage.removeItem('seatLogs');
     }
+
+    async function loadUnavailableSeats() {
+  const formData = new URLSearchParams();
+  formData.append('mode', 'getUnavailableSeats');
+
+  try {
+    const res = await fetch('https://script.google.com/macros/s/AKfycbyeSdQYeuDnklDsJ251YahsMuW7sYmpe1ZzqEzIqIKUjKpup9YmSGCfRNCsrwP9Fg9H/exec', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: formData.toString(),
+    });
+
+    const result = await res.json();
+    const unavailableSeats = result.unavailable;
+    markUnavailableSeats(unavailableSeats);
+  } catch (error) {
+    alert("読み込みエラーが発生しました");
+    console.error("読み込みエラー", error);
+  }
+}
+
+function markUnavailableSeats(seatIds) {
+  seatIds.forEach(seatId => {
+    const seat = document.querySelector(`.seat[data-id='${seatId}']`);
+    if (seat) {
+      seat.classList.add('unavailable');
+      seat.style.background = "#999";
+      seat.style.color = "#333";
+      seat.style.cursor = "not-allowed";
+      seat.style.pointerEvents = "none";
+      seat.title = "使用不可";
+    }
+  });
+}
+
 
     createSeats();
   </script>
