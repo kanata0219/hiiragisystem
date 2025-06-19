@@ -123,6 +123,9 @@
 </head>
 <body>
   <h1>座席管理システム</h1>
+  <div id="occupancyRate" style="font-size: 20px; margin-bottom: 10px;">
+  混雑率：-- %
+</div>
   <button onclick="document.getElementById('settingsModal').style.display='flex'">設定</button>
   <br><br>
   <textarea id="logOutput" rows="10" cols="80" readonly style="display:none;"></textarea>
@@ -208,6 +211,7 @@
         });
       }
       restoreSeatState();
+      updateOccupancyRate(); 
     }
 
     function saveLogs() {
@@ -293,6 +297,7 @@
       logData.push({ id, seatId, number: inputNumberStr, name: userName, checkIn: now, checkOut: '' });
       saveLogs();
       closeAssignModal();
+      updateOccupancyRate(); 
     }
 
     function closeAssignModal() {
@@ -315,6 +320,7 @@
         const log = logData.find(entry => entry.seatId === seatId && !entry.checkOut);
         if (log) log.checkOut = now;
         saveLogs();
+        updateOccupancyRate(); 
       }
       leaveTargetSeat = null;
     }
@@ -371,6 +377,7 @@
     const result = await res.json();
     const unavailableSeats = result.unavailable;
     markUnavailableSeats(unavailableSeats);
+    updateOccupancyRate(); 
   } catch (error) {
     alert("読み込みエラーが発生しました");
     console.error("読み込みエラー", error);
@@ -389,6 +396,19 @@ function markUnavailableSeats(seatIds) {
       seat.title = "使用不可";
     }
   });
+}
+function updateOccupancyRate() {
+  const totalSeats = seatIds.length;
+  const unavailableSeats = document.querySelectorAll('.seat.unavailable').length;
+  const availableSeats = totalSeats - unavailableSeats;
+
+  const occupiedSeats = document.querySelectorAll('.seat.active').length;
+
+  const rate = availableSeats > 0 ? (occupiedSeats / availableSeats * 100) : 0;
+  const roundedRate = Math.round(rate * 10) / 10;
+
+  const rateEl = document.getElementById('occupancyRate');
+  rateEl.textContent = `混雑率：${roundedRate}%`;
 }
 
 
