@@ -128,7 +128,6 @@
 </div>
   <button onclick="document.getElementById('settingsModal').style.display='flex'">設定</button>
   <br><br>
-  <textarea id="logOutput" rows="10" cols="80" readonly style="display:none;"></textarea>
   <div class="seat-grid" id="seatGrid"></div>
 
   <!-- 設定モーダル -->
@@ -138,7 +137,6 @@
       <button onclick="exportLogs()">ログをCSVで保存</button>
       <button onclick="clearAllSeats()">全てクリア</button>
       <button onclick="showLogs()">ログを表示</button>
-      <button onclick="loadUnavailableSeats()">使用不可能席の読み込み</button>
       <br><br>
       <button onclick="document.getElementById('settingsModal').style.display='none'">閉じる</button>
     </div>
@@ -178,6 +176,17 @@
       <button onclick="confirmLeave(false)">いいえ</button>
     </div>
   </div>
+
+ 　 <!-- ログ表示モーダル -->
+　<div class="overlay" id="logModal">
+　  <div class="modal">
+   　 <h2>ログ表示</h2>
+   　 <textarea id="logOutputModal" rows="15" cols="50" readonly style="width:100%; height: 300px;"></textarea>
+   　 <br>
+   　 <button onclick="document.getElementById('logModal').style.display='none'">閉じる</button>
+ 　 </div>
+　</div>
+
 
   <script>
     const seatGrid = document.getElementById('seatGrid');
@@ -341,15 +350,16 @@
       URL.revokeObjectURL(url);
     }
 
-    function showLogs() {
-      let csv = 'ID,座席番号,登録番号,名前,登録時間,退席時間\n';
-      logData.forEach(log => {
-        csv += `${log.id},${log.seatId},${log.number},${log.name},${log.checkIn},${log.checkOut}\n`;
-      });
-      const textarea = document.getElementById('logOutput');
-      textarea.style.display = 'block';
-      textarea.value = csv;
-    }
+function showLogs() {
+  let csv = 'ID,座席番号,登録番号,名前,登録時間,退席時間\n';
+  logData.forEach(log => {
+    csv += `${log.id},${log.seatId},${log.number},${log.name},${log.checkIn},${log.checkOut}\n`;
+  });
+  const textarea = document.getElementById('logOutputModal');
+  textarea.value = csv;
+  document.getElementById('logModal').style.display = 'flex';
+}
+
 
     function clearAllSeats() {
       document.querySelectorAll('.seat').forEach(seat => {
